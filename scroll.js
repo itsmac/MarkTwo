@@ -1,3 +1,5 @@
+import { fetchPostsData } from './GeneratePosts.js';
+
 const API_KEY = "yTliB0obDXV6DLvrIBduGZgK6TcCmHx6";
 
 const URL =
@@ -18,30 +20,43 @@ const card = document.querySelector(".card");
 // }
 // );
 
-async function getData() {
-  let response = await fetch(URL);
-  let responseJson = await response.json();
-  printTitle(responseJson);
+
+
+async function getData(limit = 10, pageNumber) {
+  try {
+    //let response = await fetch(URL);
+    let response = await fetchPostsData(limit, pageNumber);
+    // console.log("------------------------");
+    // console.log(response);
+    // //let responseJson = await response.json();
+    printTitle(response);
+  }
+  catch(err)  {
+    console.log("Exception :" + err);
+  }
+
 }
 
 function printTitle(val) {
-  let contentTitle = "";
-  //let gifPreviewContent = "";
-  //titleList.innerHTML +=
-  val.data.forEach((element, index) => {
-    contentTitle += `<div> Title : ${element.title} </div>
-        <img  
-         src = ${element.images.downsized.url} width = "150"
-         > </img>`;
+  const parentDiv = document.createElement('div');
 
-    // gifPreviewContent +=
-    //  `<video  with = "150" controls autoplay loop >
-    //  <source src = ${val.data.images.preview.mp4}
-    //  type = "video/mp4"> </video>`;
+  val.forEach((element, index) => {
+    //TODO : Add exception handling for nulls in response
+    const article = document.createElement('article');
+    const articleHeading = document.createElement('h2');
+    const articleDescription = document.createElement('p');
 
-    //card.insertAdjacentHTML("beforeend", "Hello")
+    articleHeading.innerHTML = element.title;
+    articleDescription.innerText = element.description;
+    
+    article.appendChild(articleHeading);
+    article.appendChild(articleDescription);
+    
+    parentDiv.append(article);
   });
-  card.innerHTML = contentTitle;
+  console.log(parentDiv)
+  //card.appe = contentTitle;
+  card.append(parentDiv);
   //content += `<div> Title : ${val.title} </div>`
 }
 
@@ -56,22 +71,27 @@ function printTitle(val) {
 //    }
 // }
 
-function popWhenScroll() {
-  //while (true){
-  //let relativeBottom = document.documentElement.getBoundingClientRect().bottom;
-  let height = document.documentElement.clientHeight;
-  //setVal = 0;
+// function popWhenScroll() {
+//   //while (true){
+//   //let relativeBottom = document.documentElement.getBoundingClientRect().bottom;
+//   let height = document.documentElement.clientHeight;
+//   //setVal = 0;
 
-  if (relativeBottom < height) {
-    getData();
-    //continue;
-  }
-  //break
-  //card.innerHTML += `<div>${new Date()}<div>`
-}
+//   if (relativeBottom < height) {
+//     getData();
+//     //continue;
+//   }
+//   //break
+//   //card.innerHTML += `<div>${new Date()}<div>`
 // }
-window.addEventListener("scroll", popWhenScroll);
+// // }``
+// window.addEventListener("scroll", popWhenScroll);
 
-getData();
+getData(10,2);
 
-//get(api), pagination , render(revamp), refresh(logic change), 
+//
+// get(api),  -> Partially done
+// pagination , 
+// render(revamp), -> Partially done
+// refresh(logic change), 
+// try remove event listener
