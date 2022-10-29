@@ -83,13 +83,13 @@ function popWhenScroll(){
     bottomHit = true;
   }
   //else {bottomHit = 0}
-  if (bottomHit == true){
+  if (bottomHit){
     bottomHit = false;
     getData(10,lastPageNumber+1);
   }
 }
 
-window.addEventListener("scroll", debounce(popWhenScroll,250));
+window.addEventListener("scroll", debounce(popWhenScroll,200));
 
 getData(10,lastPageNumber+1);
 
