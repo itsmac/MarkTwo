@@ -1,4 +1,5 @@
 import { fetchPostsData } from './GeneratePosts.js';
+//import { throttle } from './throttle.js';
 
 // const URL =
 //   "https://api.giphy.com/v1/gifs/trending?api_key=" + API_KEY + "&limit=10";
@@ -7,31 +8,28 @@ import { fetchPostsData } from './GeneratePosts.js';
 const card = document.querySelector(".card");
 let lastPageNumber = -1;
 let bottomHit = false;
-
-//const gifPreview = document.querySelector(".gifPreview");
-// console.log(card.getBoundingClientRect().bottom)
-// console.log(card.getBoundingClientRect().top)
-
-// window.addEventListener("scroll", (event)=>{
-//     let height = card.scrollHeight;
-//     let bottom = card.height - card.scrollTop;
-//     if(card.getBoundingClientRect().bottom < card.clientHeight){
-//         console.log("REached end")
-//     }
-//console.log(height)
-
-// }
-// );
+let fetchPostsDataState = 'idle';
+let lastCall;
+let throttleMethod;
 
 async function getData(limit = 10, pageNumber) {
   try {
     //console.log(lastPageNumber);
     //let response = await fetch(URL);
-    // let response;
-    if (pageNumber == lastPageNumber) {return;}
-    let response = await fetchPostsData(limit, pageNumber);
-    if (response != []){lastPageNumber = pageNumber}
-    printTitle(response);
+    let response;
+    if (pageNumber <= lastPageNumber) {return;}
+
+    if (fetchPostsDataState == 'idle'){
+      fetchPostsDataState = 'pending';
+      response = await fetchPostsData(limit, pageNumber);
+      if (response != []){lastPageNumber = pageNumber}
+    }
+    console.log();response
+    //response = await fetchPostsData(limit, pageNumber);
+    if(response){fetchPostsDataState = 'idle';}
+
+    //if (response != []){lastPageNumber = pageNumber}
+    return response;
   }
   catch(err)  {
     console.log("Exception :" + err);
@@ -40,6 +38,9 @@ async function getData(limit = 10, pageNumber) {
 }
 
 function printTitle(val) {
+  if(!val || val === undefined){ 
+    console.log("val :" + val); 
+    return;}
   const parentDiv = document.createElement('div');
 
   val.forEach((element, index) => {
@@ -57,10 +58,7 @@ function printTitle(val) {
     parentDiv.append(article);
   });
   console.log(parentDiv)
-  //card.appe = contentTitle;
   card.append(parentDiv);
-  
-  //content += `<div> Title : ${val.title} </div>`
 }
 
 
@@ -74,7 +72,22 @@ function debounce(func, wait) {
   }
 }
 
+
+function throttle(fn, ms) {
+  return ()=> {
+    let previousCall = lastCall;
+    lastCall = Date.now();
+    if (
+      previousCall === undefined || // function is being called for the first time
+      lastCall - previousCall > ms
+    ) {
+      fn();
+    }
+  };
+}
+
 function popWhenScroll(){
+  //let postDataResponse;
   let scrollTopVal = document.documentElement.scrollTop;
   let scrollHeightVal = document.documentElement.scrollHeight;
   let clientHeightVal = document.documentElement.clientHeight;
@@ -85,17 +98,30 @@ function popWhenScroll(){
   //else {bottomHit = 0}
   if (bottomHit){
     bottomHit = false;
-    getData(10,lastPageNumber+1);
+    getData(10,lastPageNumber+1).then((resp)=> printTitle(resp));
+    //printTitle(postDataResponse);
   }
 }
 
-window.addEventListener("scroll", debounce(popWhenScroll,200));
+// throttleMethod = throttle(popWhenScroll,20)
+window.addEventListener("scroll", throttle(popWhenScroll,20));
 
-getData(10,lastPageNumber+1);
+
+
+
+
+getData(10,lastPageNumber+1).then((resp)=>printTitle(resp));
+
+// printTitle(resp);
 
 //
 // get(api),  -> Partially done
 // pagination -> Partially done, 
 // render(revamp), -> Partially done
 // refresh(logic change), 
+
+
+
 // try remove event listener
+
+// idle pending success 
