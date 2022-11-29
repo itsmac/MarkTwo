@@ -1,34 +1,40 @@
 import { fetchPostsData } from './GeneratePosts.js';
-//import { throttle } from './throttle.js';
 
 // const URL =
 //   "https://api.giphy.com/v1/gifs/trending?api_key=" + API_KEY + "&limit=10";
 
 
 const card = document.querySelector(".card");
+const search = document.querySelector('input');
+let searchTerm = document.getElementById('search').value;
+
+
 let lastPageNumber = -1;
 let bottomHit = false;
 let fetchPostsDataState = 'idle';
 let lastCall;
-let throttleMethod;
 
-async function getData(limit = 10, pageNumber) {
+
+
+
+
+
+
+async function getData(limit = 10, pageNumber, searchTerm = '') {
   try {
     //console.log(lastPageNumber);
     //let response = await fetch(URL);
     let response;
-    if (pageNumber <= lastPageNumber) {return;}
+    //if (pageNumber <= lastPageNumber) {return;}
 
     if (fetchPostsDataState == 'idle'){
       fetchPostsDataState = 'pending';
-      response = await fetchPostsData(limit, pageNumber);
+      if (searchTerm == ''){response = await fetchPostsData(limit, pageNumber);}
+      else {response = await fetchPostsData(limit, pageNumber,searchTerm);}
       if (response != []){lastPageNumber = pageNumber}
     }
-    console.log();response
-    //response = await fetchPostsData(limit, pageNumber);
+    console.log(response);
     if(response){fetchPostsDataState = 'idle';}
-
-    //if (response != []){lastPageNumber = pageNumber}
     return response;
   }
   catch(err)  {
@@ -98,19 +104,28 @@ function popWhenScroll(){
   //else {bottomHit = 0}
   if (bottomHit){
     bottomHit = false;
-    getData(10,lastPageNumber+1).then((resp)=> printTitle(resp));
+    getData(10,lastPageNumber+1,searchTerm).then((resp)=> printTitle(resp));
     //printTitle(postDataResponse);
   }
 }
 
+function popWhenSearch(){
+  card.innerHTML = '';
+  console.log(document.getElementById('search').value);
+  searchTerm = document.getElementById('search').value;
+  if (searchTerm != ''){
+  getData(10,0,searchTerm).then((resp)=> printTitle(resp));
+  }
+}
+
 // throttleMethod = throttle(popWhenScroll,20)
-window.addEventListener("scroll", throttle(popWhenScroll,20));
+window.addEventListener("scroll", throttle(popWhenScroll,50));
+search.addEventListener("input", debounce(popWhenSearch,300))
 
 
 
 
-
-getData(10,lastPageNumber+1).then((resp)=>printTitle(resp));
+//getData(10,lastPageNumber+1).then((resp)=>printTitle(resp));
 
 // printTitle(resp);
 
@@ -125,3 +140,13 @@ getData(10,lastPageNumber+1).then((resp)=>printTitle(resp));
 // try remove event listener
 
 // idle pending success 
+
+
+
+//TODO:
+//Dead code deletion
+//Refactor
+//Input field -> debounce() 
+//Data and page should get refreshed.
+
+//giphy api implementation
