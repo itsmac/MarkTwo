@@ -4,6 +4,14 @@ import { fetchPostsData } from './GeneratePosts.js';
 //   "https://api.giphy.com/v1/gifs/trending?api_key=" + API_KEY + "&limit=10";
 
 
+//https://api.giphy.com/v1/gifs/trending?api_key=yTliB0obDXV6DLvrIBduGZgK6TcCmHx6
+
+const API_KEY = 'yTliB0obDXV6DLvrIBduGZgK6TcCmHx6';
+
+const trendingURL = "https://api.giphy.com/v1/gifs/trending?api_key=" + API_KEY + "&limit=10";
+const URL = 'https://api.giphy.com/v1/gifs/'
+const searchURL = URL+'search'+'?api_key='+API_KEY+'&q=';
+
 const card = document.querySelector(".card");
 const search = document.querySelector('input');
 let searchTerm = document.getElementById('search').value;
@@ -13,6 +21,7 @@ let lastPageNumber = -1;
 let bottomHit = false;
 let fetchPostsDataState = 'idle';
 let lastCall;
+let offset = 0;
 
 
 
@@ -29,12 +38,17 @@ async function getData(limit = 10, pageNumber, searchTerm = '') {
 
     if (fetchPostsDataState == 'idle'){
       fetchPostsDataState = 'pending';
-      if (searchTerm == ''){response = await fetchPostsData(limit, pageNumber);}
-      else {response = await fetchPostsData(limit, pageNumber,searchTerm);}
-      if (response != []){lastPageNumber = pageNumber}
+      if (searchTerm == ''){response = await fetch(trendingURL);}
+      else {
+        response = await fetch(searchURL+searchTerm+'&limit='+limit+'&offset='+(lastPageNumber*10));
+      }
+      //if (response != []){lastPageNumber = pageNumber}
     }
     console.log(response);
-    if(response){fetchPostsDataState = 'idle';}
+    if(response){
+      fetchPostsDataState = 'idle';
+      lastPageNumber += 1;
+    }
     return response;
   }
   catch(err)  {
@@ -48,18 +62,23 @@ function printTitle(val) {
     console.log("val :" + val); 
     return;}
   const parentDiv = document.createElement('div');
-
-  val.forEach((element, index) => {
+  let data = val.data;
+  data.forEach((element, index) => {
     //TODO : Add exception handling for nulls in response
     const article = document.createElement('article');
     const articleHeading = document.createElement('h2');
-    const articleDescription = document.createElement('p');
+    //const articleDescription = document.createElement('p');
+    const articleGif = document.createElement('img')
 
     articleHeading.appendChild(document.createTextNode(element.title));
-    articleDescription.appendChild(document.createTextNode(element.description));
+    //articleDescription.appendChild(document.createTextNode(element.description));
+    articleGif.src = element.images.downsized.url;
+    articleGif.width = '150';
+
+
     
     article.appendChild(articleHeading);
-    article.appendChild(articleDescription);
+    article.appendChild(articleGif);
     
     parentDiv.append(article);
   });
@@ -104,17 +123,21 @@ function popWhenScroll(){
   //else {bottomHit = 0}
   if (bottomHit){
     bottomHit = false;
-    getData(10,lastPageNumber+1,searchTerm).then((resp)=> printTitle(resp));
+    getData(10,lastPageNumber+1,searchTerm).then(resp => resp.json().then(data=>printTitle(data)));
     //printTitle(postDataResponse);
   }
 }
 
 function popWhenSearch(){
+  let resp;
   card.innerHTML = '';
+  lastPageNumber = 0;
   console.log(document.getElementById('search').value);
   searchTerm = document.getElementById('search').value;
   if (searchTerm != ''){
-  getData(10,0,searchTerm).then((resp)=> printTitle(resp));
+  getData(10,0,searchTerm).then(resp => resp.json().then(data=>printTitle(data)));
+  // resp = getData(10,0,searchTerm).then();
+  // printTitle(resp);
   }
 }
 
